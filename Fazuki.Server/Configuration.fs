@@ -44,9 +44,6 @@ module Config =
 
         let mutable isRunning = true
 
-        let log level message = 
-            config.Loggers |> Seq.iter (fun l -> l level message)
-
         let conn = 
             match config.Port with
             | None -> failwith "Port not set!"

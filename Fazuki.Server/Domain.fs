@@ -18,10 +18,6 @@ type Consumer<'req, 'rep> = {
     Id : string;
 }
 
-type LogLevel = Debug | Info | Warning | Error | Fatal
-
-type Logger = LogLevel -> string -> unit
-
 type GetConsumerError = 
     | MessageEmpty
     | NoContent
@@ -41,8 +37,16 @@ type ServerError =
 
 type PipelineOutput<'res> =
     | Success of 'res
-    | Failed of ServerError 
+    | Failed of ServerError
 
+type ReceiveSuccess = {Id:Guid; EncodedRequest:byte[]}
+type DecodeSuccess = {Id:Guid; DecodedRequest:string}
+type GetConsumerSuccess = {Id:Guid; Consumer:UntypedConsumer; Body:string}
+type DeserializeSuccess = {Id:Guid; Consumer:UntypedConsumer; Message:obj}
+type ExecuteSuccess = {Id:Guid; Consumer:UntypedConsumer; Response:obj}
+type SerializeSuccess = {Id:Guid; SerializedResponse:string}
+type EncodeSuccess = {Id:Guid; EncodedResponse:string}
+type SendSuccess = {Id:Guid}
   
 type ReceiveResult = PipelineOutput<byte[]>
 type DecodeResult = PipelineOutput<string>
@@ -53,11 +57,21 @@ type SerializeResult = PipelineOutput<string>
 type EncodeResult = PipelineOutput<byte[]>
 type SendResult = PipelineOutput<unit>
 
+type Filter = 
+    | ReceiveFilter of (ReceiveResult -> ReceiveResult)
+    | DecodeFilter of (DecodeResult -> DecodeResult)
+    | GetConsumerFilter of (GetConsumerResult -> GetConsumerResult)
+    | DeserializeFilter of (DeserializeResult -> DeserializeResult)
+    | ExecuteFilter of (ExecuteResult -> ExecuteResult)
+    | SerializeFilter of (SerializeResult -> SerializeResult)
+    | EncodeFilter of (EncodeResult -> EncodeResult)
+    | SendFilter of (SendResult -> SendResult)
+
 type ServerConfig = {
     Serializer : Serializer
     Consumers : UntypedConsumer list 
     Port : Port
-    Loggers : Logger list
+    Filers : Filter list
 }    
 
 
