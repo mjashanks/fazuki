@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>cd2342b2-a0ae-42b2-ae20-09a2e048c380</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Zoco.Jil</RootNamespace>
+    <RootNamespace>Fazuki.Jil</RootNamespace>
     <AssemblyName>Fazuki.Jil</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
@@ -22,7 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\Zoco.Jil.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Fazuki.Jil.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\Zoco.Jil.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Fazuki.Jil.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Jil">
@@ -53,7 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JilSerialization.fs" />
-    <None Include="Script.fsx" />
     <None Include="packages.config" />
     <None Include="app.config" />
   </ItemGroup>

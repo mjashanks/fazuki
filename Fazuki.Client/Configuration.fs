@@ -6,13 +6,13 @@ open fszmq
 open System.Text
 open Fazuki.Common.Helpers
 open Fazuki.Client
+open Fazuki.Common
 
 module Config =
 
-    let private stubSerializer = {
-        Serialize = fun t o ->  failwith "serializer not set";
-        Deserialize = fun t s -> failwith "serializer not set";
-    }
+    let private stubSerializer = 
+        {Serialize = (fun t o ->  failwith "serializer not set");
+        Deserialize = (fun t s -> failwith "serializer not set")}
 
     let IsAlwaysRunning () = true 
 

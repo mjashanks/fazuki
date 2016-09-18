@@ -1,12 +1,18 @@
-﻿#r "../Zoco/bin/Debug/Zoco.dll"
-#r "../Zoco.Jil/bin/Debug/Zoco.Jil.dll"
-#r "./bin/Debug/ZocoTestApps.dll"
+﻿#r "../Fazuki.Server/bin/Debug/Fazuki.Server.dll"
+#r "../Fazuki.Server/bin/Debug/Fazuki.Common.dll"
+#r "../Fazuki.Jil/bin/Debug/Fazuki.Jil.dll"
 
+open Fazuki.Server
+open Fazuki.Jil
 
-open Zoco
-open Zoco.Jil
-open Zoco.ConsumerExecution
-open ZocoTestApps.Domain
+type GetCreatures = {
+    CreatureType : string
+}
+
+type Creature = {
+    Type : string;
+    Name : string;
+}
 
 let configureServer consumers=
     {(Config.InitialiseServerConfig consumers) with
@@ -15,9 +21,9 @@ let configureServer consumers=
 
 let CreatureConsumer req = 
     printf "Requested: %s" req.CreatureType
-    [{Name="Bobby"; CreatureType="Dog"};
-     {Name="Fern"; CreatureType="Princess"}]
-    |> List.filter (fun c -> c.CreatureType = req.CreatureType)
+    [{Name="Bobby"; Type="Dog"};
+     {Name="Fern"; Type="Princess"}]
+    |> List.filter (fun c -> c.Type = req.CreatureType)
 
 let Consumers = 
     [CreateConsumer<CreaturesInMyHomeRequest, Creatures> CreatureConsumer]
