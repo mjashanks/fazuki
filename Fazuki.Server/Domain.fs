@@ -18,14 +18,14 @@ type Handler<'req, 'rep> = {
     Id : string;
 }
 
-type ReceiveSuccess = {Id:Guid; EncodedRequest:byte[]}
-type DecodeSuccess = {Id:Guid; DecodedRequest:string}
-type GetHandlerSuccess = {Id:Guid; Handler:UntypedHandler; Body:string}
-type DeserializeSuccess = {Id:Guid; Handler:UntypedHandler; Message:obj}
-type ExecuteSuccess = {Id:Guid; Handler:UntypedHandler; Response:obj}
-type SerializeSuccess = {Id:Guid; SerializedResponse:string}
-type EncodeSuccess = {Id:Guid; EncodedResponse:byte[]}
-type SendSuccess = {Id:Guid}
+type ReceiveSuccess = {EncodedRequest:byte[]}
+type DecodeSuccess = {DecodedRequest:string}
+type GetHandlerSuccess = {Handler:UntypedHandler; Body:string}
+type DeserializeSuccess = {Handler:UntypedHandler; Message:obj}
+type ExecuteSuccess = {Handler:UntypedHandler; Response:obj}
+type SerializeSuccess = {SerializedResponse:string}
+type EncodeSuccess = {EncodedResponse:byte[]}
+type SendSuccess = unit
 
 type PipelineSuccess = 
     | ReceiveSuccess of ReceiveSuccess
@@ -59,9 +59,14 @@ type ServerError =
     | EncodeError of Exception
     | SendError of Exception
 
-type PipelineOutput<'res> =
+type StepResult<'res> =
     | Success of 'res
     | Failed of ServerError
+
+type PipelineOutput<'res> = {
+    Id : Guid
+    StepResult : StepResult<'res> 
+}
   
 type ReceiveResult = PipelineOutput<ReceiveSuccess>
 type DecodeResult = PipelineOutput<DecodeSuccess>
