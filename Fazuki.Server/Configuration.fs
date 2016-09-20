@@ -124,7 +124,7 @@ module Config =
                 | Success(b) -> b.EncodedResponse
             try 
                 Socket.send responder replyBytes
-                Success
+                Success({Id=Guid.NewGuid()})
             with | ex -> Failed(SendError ex) // need to define this
 
         member c.IsRunning () = 

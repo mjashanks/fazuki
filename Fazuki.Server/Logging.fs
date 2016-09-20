@@ -21,7 +21,7 @@ module Logging =
 
         let ReceiveLogger (result:ReceiveResult) = 
             match result with
-            | Success(r) -> LogDebug (sprintf "Received Success: %i" r.Length)
+            | Success(r) -> LogDebug (sprintf "Received Success: %i" r.EncodedRequest.Length)
             | Failed(e) -> 
                 match e with
                 | ReceiveError(e) -> LogError (e.ToString())
@@ -30,7 +30,7 @@ module Logging =
 
         let DecodeLogger (result:DecodeResult) = 
             match result with
-            | Success(r) -> LogDebug (sprintf "Decode Success: %s" r)
+            | Success(r) -> LogDebug (sprintf "Decode Success: %s" r.DecodedRequest)
             | Failed(e) -> 
                 match e with
                 | DecodeError(e) -> LogError (e.ToString())
