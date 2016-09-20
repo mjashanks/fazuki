@@ -6,19 +6,43 @@ open Fazuki.Common
 
 type MessageStream = IObservable<string> 
 
-type UntypedConsumer = {
+type UntypedHandler = {
     Consume : obj -> obj;
     Id : string;
     Request : Type;
     Response : Type;
 }
 
-type Consumer<'req, 'rep> = {
+type Handler<'req, 'rep> = {
     Consume : 'req -> 'rep;
     Id : string;
 }
 
-type GetConsumerError = 
+type ReceiveSuccess = {Id:Guid; EncodedRequest:byte[]}
+type DecodeSuccess = {Id:Guid; DecodedRequest:string}
+type GetHandlerSuccess = {Id:Guid; Handler:UntypedHandler; Body:string}
+type DeserializeSuccess = {Id:Guid; Handler:UntypedHandler; Message:obj}
+type ExecuteSuccess = {Id:Guid; Handler:UntypedHandler; Response:obj}
+type SerializeSuccess = {Id:Guid; SerializedResponse:string}
+type EncodeSuccess = {Id:Guid; EncodedResponse:byte[]}
+type SendSuccess = {Id:Guid}
+
+type PipelineSuccess = 
+    | ReceiveSuccess of ReceiveSuccess
+    | DecodeSuccess of DecodeSuccess
+    | GetHandlerSuccess of GetHandlerSuccess
+    | DeserializeSuccess of DeserializeSuccess
+    | ExecuteSuccess of ExecuteSuccess
+    | SerializeSuccess of SerializeSuccess
+    | EncodeSuccess of EncodeSuccess
+    | SendSuccess of SendSuccess
+
+type PipelineException = {
+    PipelineInputs : PipelineSuccess list;
+    Exception : Exception
+}
+
+type GetHandlerError = 
     | MessageEmpty
     | NoContent
     | NoMessageName
@@ -28,7 +52,7 @@ type GetConsumerError =
 type ServerError = 
     | ReceiveError of Exception
     | DecodeError of Exception
-    | GetConsumerError of GetConsumerError
+    | GetHandlerError of GetHandlerError
     | DeserializeError of Exception
     | ExecuteError of Exception
     | SerializeError of Exception
@@ -38,29 +62,20 @@ type ServerError =
 type PipelineOutput<'res> =
     | Success of 'res
     | Failed of ServerError
-
-type ReceiveSuccess = {Id:Guid; EncodedRequest:byte[]}
-type DecodeSuccess = {Id:Guid; DecodedRequest:string}
-type GetConsumerSuccess = {Id:Guid; Consumer:UntypedConsumer; Body:string}
-type DeserializeSuccess = {Id:Guid; Consumer:UntypedConsumer; Message:obj}
-type ExecuteSuccess = {Id:Guid; Consumer:UntypedConsumer; Response:obj}
-type SerializeSuccess = {Id:Guid; SerializedResponse:string}
-type EncodeSuccess = {Id:Guid; EncodedResponse:string}
-type SendSuccess = {Id:Guid}
   
-type ReceiveResult = PipelineOutput<byte[]>
-type DecodeResult = PipelineOutput<string>
-type GetConsumerResult = PipelineOutput<UntypedConsumer * string>
-type DeserializeResult = PipelineOutput<UntypedConsumer * obj>
-type ExecuteResult = PipelineOutput<UntypedConsumer * obj>
-type SerializeResult = PipelineOutput<string>
-type EncodeResult = PipelineOutput<byte[]>
-type SendResult = PipelineOutput<unit>
+type ReceiveResult = PipelineOutput<ReceiveSuccess>
+type DecodeResult = PipelineOutput<DecodeSuccess>
+type GetHandlerResult = PipelineOutput<GetHandlerSuccess>
+type DeserializeResult = PipelineOutput<DeserializeSuccess>
+type ExecuteResult = PipelineOutput<ExecuteSuccess>
+type SerializeResult = PipelineOutput<SerializeSuccess>
+type EncodeResult = PipelineOutput<EncodeSuccess>
+type SendResult = PipelineOutput<SendSuccess>
 
 type Filter = 
     | ReceiveFilter of (ReceiveResult -> ReceiveResult)
     | DecodeFilter of (DecodeResult -> DecodeResult)
-    | GetConsumerFilter of (GetConsumerResult -> GetConsumerResult)
+    | GetHandlerFilter of (GetHandlerResult -> GetHandlerResult)
     | DeserializeFilter of (DeserializeResult -> DeserializeResult)
     | ExecuteFilter of (ExecuteResult -> ExecuteResult)
     | SerializeFilter of (SerializeResult -> SerializeResult)
@@ -69,7 +84,7 @@ type Filter =
 
 type ServerConfig = {
     Serializer : Serializer
-    Consumers : UntypedConsumer list 
+    Handlers : UntypedHandler list 
     Port : Port
     Filers : Filter list
 }    

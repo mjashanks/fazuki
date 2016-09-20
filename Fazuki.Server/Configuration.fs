@@ -7,11 +7,11 @@ open System.Text
 open Fazuki.Common.Helpers
 open Fazuki.Common
 
-module ConsumerCollectionFactory = 
+module HandlerCollectionFactory = 
     
-    let AddConsumer<'req,'rep> (consumer:Consumer<'req,'rep>) (collection:list<UntypedConsumer>) = 
-        let untyped = {Consume = (fun req -> (consumer.Consume (req :?> 'req)) :> obj)
-                       Id=consumer.Id; 
+    let AddHandler<'req,'rep> (handler:Handler<'req,'rep>) (collection:list<UntypedHandler>) = 
+        let untyped = {Consume = (fun req -> (handler.Consume (req :?> 'req)) :> obj)
+                       Id=handler.Id; 
                        Request=typeof<'req>; 
                        Response=typeof<'rep> }                        
         List.append collection [untyped]
@@ -31,7 +31,7 @@ module Config =
                         (match typeof<'out> with
                         | t when t = typeof<ReceiveResult> -> ReceiveError ex
                         | t when t = typeof<DecodeResult> -> DecodeError ex
-                        | t when t = typeof<GetConsumerResult> -> GetConsumerError <| GetConsumerError.Unknown(ex)
+                        | t when t = typeof<GetHandlerResult> -> GetHandlerError <| GetHandlerError.Unknown(ex)
                         | t when t = typeof<DeserializeResult> -> DeserializeError ex
                         | t when t = typeof<ExecuteResult> -> ExecuteError ex
                         | t when t = typeof<SerializeResult> -> SerializeError ex
@@ -55,60 +55,76 @@ module Config =
             resp     
        
         member c.Receive () : ReceiveResult = 
-            try Success(responder |> Socket.recv) with | ex -> Failed(ReceiveError ex)
+            try Success(
+                    {Id=Guid.NewGuid(); 
+                    EncodedRequest=responder |> Socket.recv}) 
+            with | ex -> Failed(ReceiveError ex)
 
         member c.Decode result : DecodeResult=
             PipelineWrap 
                 result 
-                (fun b -> Success(Encoding.UTF8.GetString(b)))                
+                (fun (b:ReceiveSuccess) -> Success(
+                                            {Id=b.Id; 
+                                            DecodedRequest=Encoding.UTF8.GetString(b.EncodedRequest)}))                
 
-        member c.GetConsumer (message:DecodeResult) : GetConsumerResult = 
-            PipelineWrap message (fun msg -> 
-                
-                let bodyStart = msg.IndexOf(":")
+        member c.GetHandler (message:DecodeResult) : GetHandlerResult = 
+            PipelineWrap message (fun (msg:DecodeSuccess) -> 
+                let decodedReq = msg.DecodedRequest
+                let bodyStart = decodedReq.IndexOf(":")
                 let name, body = 
                     match bodyStart with
                     | -1 -> "",""
-                    | s when s = msg.Length - 1 -> msg.Substring(0, s-1), ""
-                    | s -> msg.Substring(0,s-2), msg.Substring(s+1, msg.Length - s+2)
+                    | s when s = decodedReq.Length - 1 -> decodedReq.Substring(0, s-1), ""
+                    | s -> decodedReq.Substring(0,s-2), decodedReq.Substring(s+1, decodedReq.Length - s+2)
 
                 match name,body with
-                | "","" -> Failed <| GetConsumerError(MessageEmpty)
-                | n,"" -> Failed <| GetConsumerError(NoContent)
-                | "",b -> Failed <| GetConsumerError(NoMessageName)
+                | "","" -> Failed <| GetHandlerError(MessageEmpty)
+                | n,"" -> Failed <| GetHandlerError(NoContent)
+                | "",b -> Failed <| GetHandlerError(NoMessageName)
                 | m,b  ->     
-                    (match config.Consumers |> List.tryFind (fun c -> c.Id = name) with
-                    | Some consumer -> Success(consumer,body)
-                    | None -> Failed <| GetConsumerError(HandlerNotFound))
-                    
-                )
+                    (match config.Handlers |> List.tryFind (fun c -> c.Id = name) with
+                    | None -> Failed <| GetHandlerError(HandlerNotFound)
+                    | Some handler -> Success(
+                                        {Id=msg.Id;
+                                        Body=body;
+                                        Handler=handler})
+                ))
         // this is a class just made to make the pipline below nice and readable
-        member c.Deserialize consumerResult : DeserializeResult=
-            PipelineWrap consumerResult (fun r ->
-                let consumer, body = r  
-                Success(consumer, (config.Serializer.Deserialize consumer.Request body)))
+        member c.Deserialize handlerResult : DeserializeResult=
+            PipelineWrap handlerResult (fun (r:GetHandlerSuccess) ->  
+                Success(
+                    {Id=r.Id; 
+                    Handler=r.Handler; 
+                    Message= config.Serializer.Deserialize r.Handler.Request r.Body}))
 
-        member c.Execute (deserializedResult:PipelineOutput<UntypedConsumer * obj>)  = 
+        member c.Execute deserializedResult : ExecuteResult  = 
             PipelineWrap deserializedResult 
-                            (fun r -> 
-                                let consumer,msg = r
-                                Success(consumer, (consumer.Consume msg)))
+                            (fun (r:DeserializeSuccess) -> 
+                                Success(
+                                    {Id=r.Id;
+                                    Handler=r.Handler;
+                                    Response=r.Handler.Consume r.Message}))
 
-        member c.Serialize response : SerializeResult=
+        member c.Serialize response : SerializeResult =
             PipelineWrap response 
-                (fun r -> 
-                    let consumer, obj = r
-                    Success(config.Serializer.Serialize (consumer.Response) obj))
+                (fun (r:ExecuteSuccess) -> 
+                    Success(
+                        {Id=r.Id;
+                        SerializedResponse=config.Serializer.Serialize (r.Handler.Response) r.Response}))
 
         member c.Encode message : EncodeResult= 
-            PipelineWrap message (fun (m:string) -> Success(Encoding.UTF8.GetBytes(m)))
+            PipelineWrap message (fun (m:SerializeSuccess) -> Success(
+                                                        {Id=m.Id;
+                                                        EncodedResponse=Encoding.UTF8.GetBytes(m.SerializedResponse)}))
        
-        member c.Send message : SendResult =
+        member c.Send (message:EncodeResult) : SendResult =
             let replyBytes = 
                 match message with
                 | Failed(s) -> [||] // need to define thie
-                | Success(b) -> b
-            try Success(Socket.send responder replyBytes) 
+                | Success(b) -> b.EncodedResponse
+            try 
+                Socket.send responder replyBytes
+                Success
             with | ex -> Failed(SendError ex) // need to define this
 
         member c.IsRunning () = 

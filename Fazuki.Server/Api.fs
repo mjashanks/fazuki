@@ -14,7 +14,7 @@ module Server = // the server pipeline
         while Instance.IsRunning() do
             Instance.Receive ()
             |> Instance.Decode
-            |> Instance.GetConsumer
+            |> Instance.GetHandler
             |> Instance.Deserialize 
             |> Instance.Execute 
             |> Instance.Serialize 
