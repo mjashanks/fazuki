@@ -77,6 +77,17 @@ type SerializeResult = PipelineOutput<SerializeSuccess>
 type EncodeResult = PipelineOutput<EncodeSuccess>
 type SendResult = PipelineOutput<SendSuccess>
 
+(*
+type PipelineResult = 
+    | ReceiveResult of ReceiveResult
+    | DecodeResult of DecodeResult
+    | GetHandlerResult of GetHandlerResult
+    | DeserializeResult of DeserializeResult
+    | ExecuteResult of ExecuteResult
+    | SerializeResult of SerializeResult
+    | EncodeResult of EncodeResult
+    | SendResult of SendResult
+    *)
 type Filter = 
     | ReceiveFilter of (ReceiveResult -> ReceiveResult)
     | DecodeFilter of (DecodeResult -> DecodeResult)

@@ -36,7 +36,13 @@ module Logging =
                 | DecodeError(e) -> LogError result.Id (e.ToString())
                 | _ -> ()
             result
-
+        
+        let StepLogger<'res> (result:PipelineOutput<'res>) 
+                             (debugText:'res->string)
+                             (errorText:ServerError->string) =      
+            match result.StepResult with
+            | Success(r) -> LogDebug result.Id <| debugText r
+                                                             
         [ReceiveFilter ReceiveLogger;
         DecodeFilter DecodeLogger]
             
