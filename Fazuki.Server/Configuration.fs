@@ -31,12 +31,10 @@ module Config =
                     StepResult=Failed
                         (match typeof<'out> with
                         | t when t = typeof<ReceiveResult> -> ReceiveError ex
-                        | t when t = typeof<DecodeResult> -> DecodeError ex
                         | t when t = typeof<GetHandlerResult> -> GetHandlerError <| GetHandlerError.Unknown(ex)
                         | t when t = typeof<DeserializeResult> -> DeserializeError ex
                         | t when t = typeof<ExecuteResult> -> ExecuteError ex
                         | t when t = typeof<SerializeResult> -> SerializeError ex
-                        | t when t = typeof<EncodeResult> -> EncodeError ex
                         | _ -> failwith "should be impossible but i dont know how to restrict it at compile time")}
                     
 
@@ -66,34 +64,23 @@ module Config =
             try OutputSuccess id {EncodedRequest=responder |> Socket.recv}
             with | ex -> OutputFail id (ReceiveError ex)
 
-        member c.Decode result : DecodeResult=
-            PipelineWrap 
-                result 
-                (fun (b:ReceiveSuccess) -> 
-                    OutputSuccess result.Id
-                                  {DecodedRequest=Encoding.UTF8.GetString(b.EncodedRequest)})                
+        member c.GetHandler (message:ReceiveResult) : GetHandlerResult = 
+            PipelineWrap message (fun (msg:ReceiveSuccess) -> 
 
-        member c.GetHandler (message:DecodeResult) : GetHandlerResult = 
-            PipelineWrap message (fun (msg:DecodeSuccess) -> 
-                let decodedReq = msg.DecodedRequest
-                let bodyStart = decodedReq.IndexOf(":")
-                let name, body = 
-                    match bodyStart with
-                    | -1 -> "",""
-                    | s when s = decodedReq.Length - 1 -> decodedReq.Substring(0, s-1), ""
-                    | s -> decodedReq.Substring(0,s-2), decodedReq.Substring(s+1, decodedReq.Length - s+2)
-
-                match name,body with
-                | "","" -> OutputFail message.Id <| GetHandlerError(MessageEmpty)
-                | n,"" -> OutputFail message.Id <| GetHandlerError(NoContent)
-                | "",b -> OutputFail message.Id <| GetHandlerError(NoMessageName)
-                | m,b  ->     
-                    (match config.Handlers |> List.tryFind (fun c -> c.Id = name) with
+                let getHandlerAndBody (req:byte[]) =
+                    let name = Encoding.UTF8.GetString(req |> Seq.take 100 |> Array.ofSeq)
+                    match config.Handlers |> List.tryFind (fun c -> c.Id = name) with
                     | None -> OutputFail message.Id <| GetHandlerError(HandlerNotFound)
                     | Some handler -> OutputSuccess message.Id
-                                                    {Body=body;
+                                                    {Body=(req |> Seq.skip 100 |> Array.ofSeq) ;
                                                     Handler=handler}
-                ))
+
+                match msg.EncodedRequest.Length with
+                | l when l < 100 -> OutputFail message.Id <| GetHandlerError(NoMessageName)
+                | l when l = 100 -> OutputFail message.Id <| GetHandlerError(NoContent)
+                | _ -> getHandlerAndBody msg.EncodedRequest  
+
+                )
         // this is a class just made to make the pipline below nice and readable
         member c.Deserialize handlerResult : DeserializeResult=
             PipelineWrap handlerResult (fun (r:GetHandlerSuccess) ->  
@@ -114,16 +101,11 @@ module Config =
                     OutputSuccess response.Id
                                   {SerializedResponse=config.Serializer.Serialize (r.Handler.Response) r.Response})
 
-        member c.Encode message : EncodeResult= 
-            PipelineWrap message (fun (m:SerializeSuccess) -> 
-                                    OutputSuccess message.Id
-                                                  {EncodedResponse=Encoding.UTF8.GetBytes(m.SerializedResponse)}))
-       
-        member c.Send (message:EncodeResult) : SendResult =
+         member c.Send (message:SerializeResult) : SendResult =
             let replyBytes = 
                 match message.StepResult with
                 | Failed(s) -> [||] // need to define thie
-                | Success(b) -> b.EncodedResponse
+                | Success(b) -> b.SerializedResponse
             try 
                 Socket.send responder replyBytes
                 OutputSuccess message.Id ()

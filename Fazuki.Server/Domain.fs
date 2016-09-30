@@ -19,22 +19,18 @@ type Handler<'req, 'rep> = {
 }
 
 type ReceiveSuccess = {EncodedRequest:byte[]}
-type DecodeSuccess = {DecodedRequest:string}
-type GetHandlerSuccess = {Handler:UntypedHandler; Body:string}
+type GetHandlerSuccess = {Handler:UntypedHandler; Body:byte[]}
 type DeserializeSuccess = {Handler:UntypedHandler; Message:obj}
 type ExecuteSuccess = {Handler:UntypedHandler; Response:obj}
-type SerializeSuccess = {SerializedResponse:string}
-type EncodeSuccess = {EncodedResponse:byte[]}
+type SerializeSuccess = {SerializedResponse:byte[]}
 type SendSuccess = unit
 
 type PipelineSuccess = 
     | ReceiveSuccess of ReceiveSuccess
-    | DecodeSuccess of DecodeSuccess
     | GetHandlerSuccess of GetHandlerSuccess
     | DeserializeSuccess of DeserializeSuccess
     | ExecuteSuccess of ExecuteSuccess
     | SerializeSuccess of SerializeSuccess
-    | EncodeSuccess of EncodeSuccess
     | SendSuccess of SendSuccess
 
 type PipelineException = {
@@ -51,12 +47,10 @@ type GetHandlerError =
 
 type ServerError = 
     | ReceiveError of Exception
-    | DecodeError of Exception
     | GetHandlerError of GetHandlerError
     | DeserializeError of Exception
     | ExecuteError of Exception
     | SerializeError of Exception
-    | EncodeError of Exception
     | SendError of Exception
 
 type StepResult<'res> =
@@ -69,12 +63,10 @@ type PipelineOutput<'res> = {
 }
   
 type ReceiveResult = PipelineOutput<ReceiveSuccess>
-type DecodeResult = PipelineOutput<DecodeSuccess>
 type GetHandlerResult = PipelineOutput<GetHandlerSuccess>
 type DeserializeResult = PipelineOutput<DeserializeSuccess>
 type ExecuteResult = PipelineOutput<ExecuteSuccess>
 type SerializeResult = PipelineOutput<SerializeSuccess>
-type EncodeResult = PipelineOutput<EncodeSuccess>
 type SendResult = PipelineOutput<SendSuccess>
 
 (*
@@ -90,13 +82,17 @@ type PipelineResult =
     *)
 type Filter = 
     | ReceiveFilter of (ReceiveResult -> ReceiveResult)
-    | DecodeFilter of (DecodeResult -> DecodeResult)
     | GetHandlerFilter of (GetHandlerResult -> GetHandlerResult)
     | DeserializeFilter of (DeserializeResult -> DeserializeResult)
     | ExecuteFilter of (ExecuteResult -> ExecuteResult)
     | SerializeFilter of (SerializeResult -> SerializeResult)
-    | EncodeFilter of (EncodeResult -> EncodeResult)
     | SendFilter of (SendResult -> SendResult)
+
+type MetaMessage = {
+    MessageId : Guid
+    Success : bool
+    Error : ServerError
+}
 
 type ServerConfig = {
     Serializer : Serializer
@@ -104,5 +100,3 @@ type ServerConfig = {
     Port : Port
     Filers : Filter list
 }    
-
-

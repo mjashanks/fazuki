@@ -4,8 +4,8 @@ open System
 open System.Collections.Generic
 
 type Serializer ={
-    Serialize : Type -> obj -> string
-    Deserialize : Type -> string -> obj
+    Serialize : Type -> obj -> byte[]
+    Deserialize : Type -> byte[] -> obj
 }
 
 type RequestResponse = { Req:Type; Rep:Type }

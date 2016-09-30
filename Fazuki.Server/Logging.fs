@@ -27,23 +27,13 @@ module Logging =
                 | ReceiveError(e) -> LogError result.Id (e.ToString())
                 | _ -> ()
             result
-
-        let DecodeLogger (result:DecodeResult) = 
-            match result.StepResult with
-            | Success(r) -> LogDebug result.Id (sprintf "Decode Success: %s" r.DecodedRequest)
-            | Failed(e) -> 
-                match e with
-                | DecodeError(e) -> LogError result.Id (e.ToString())
-                | _ -> ()
-            result
         
-        let StepLogger<'res> (result:PipelineOutput<'res>) 
+        (*let StepLogger<'res> (result:PipelineOutput<'res>) 
                              (debugText:'res->string)
                              (errorText:ServerError->string) =      
             match result.StepResult with
-            | Success(r) -> LogDebug result.Id <| debugText r
+            | Success(r) -> LogDebug result.Id <| debugText r*)
                                                              
-        [ReceiveFilter ReceiveLogger;
-        DecodeFilter DecodeLogger]
+        [ReceiveFilter ReceiveLogger]
             
 

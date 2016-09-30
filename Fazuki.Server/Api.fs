@@ -13,12 +13,10 @@ module Server = // the server pipeline
         // this is the main server pipeline
         while Instance.IsRunning() do
             Instance.Receive ()
-            |> Instance.Decode
             |> Instance.GetHandler
             |> Instance.Deserialize 
             |> Instance.Execute 
             |> Instance.Serialize 
-            |> Instance.Encode
             |> Instance.Send
             |> ignore
 
