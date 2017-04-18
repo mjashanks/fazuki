@@ -1,12 +1,12 @@
 ﻿#r "../Fazuki.Client/bin/Debug/fszmq.dll"
-#r "../Fazuki.Client/bin/Debug/Fazuki.Client.dll"
 #r "../Fazuki.Client/bin/Debug/Fazuki.Common.dll"
-#r "../Fazuki.Jil/bin/Debug/Fazuki.Jil.dll"
-#r "../Fazuki.Jil/bin/Debug/Sigil.dll"
-#r "../Fazuki.Jil/bin/Debug/Jil.dll"
+#r "../Fazuki.Client/bin/Debug/Fazuki.Client.dll"
+#r "../Fazuki.NewtonsoftJson/bin/Debug/Fazuki.NewtonsoftJson.dll"
+#r "../Fazuki.NewtonsoftJson/bin/Debug/Newtonsoft.Json.dll"
 
+open fszmq
 open Fazuki.Client
-open Fazuki.Jil
+open Fazuki.NewtonsoftJson
 
 type GetCreatures = {
     CreatureType : string
@@ -18,11 +18,14 @@ type Creature = {
 }
 
 let config =
-    {Url = Some("localhost:4567");
-     Serializer = Serialization.JilSerializer}
+    {Url = "localhost:5555";
+     Serializer = Serialization.NewtonsoftSerializer}
 
-printfn "config: %s" (match config.Url with | Some(s) -> s | None -> "")
+printfn "config: %s" config.Url
 
-Client.Send<Creature list> config {CreatureType="Dog"}
-|> Seq.iter (fun c -> printfn "CreatureName = %s " c.Name)
+let client = Client(config)
+
+for i in [0..100] do
+    client.Send<Creature list> "get_creatures" ({CreatureType="Dog"})
+    |> Seq.iter (fun c -> printfn "CreatureName = %s " c.Name)
 

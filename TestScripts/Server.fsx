@@ -1,9 +1,13 @@
-﻿#r "../Fazuki.Server/bin/Debug/Fazuki.Server.dll"
-#r "../Fazuki.Server/bin/Debug/Fazuki.Common.dll"
+﻿#r "../Fazuki.Server/bin/Debug/Fazuki.Common.dll"
+#r "../Fazuki.Server/bin/Debug/Fazuki.Server.dll"
 #r "../Fazuki.Jil/bin/Debug/Fazuki.Jil.dll"
+#r "../Fazuki.Server/bin/Debug/fszmq.dll"
+
 
 open Fazuki.Server
 open Fazuki.Jil
+open Fazuki.Server.Helpers
+open Fazuki.Common
 
 type GetCreatures = {
     CreatureType : string
@@ -14,20 +18,19 @@ type Creature = {
     Name : string;
 }
 
-let configureServer consumers=
-    {(Config.InitialiseServerConfig consumers) with
-        Serializer = Serialization.JilSerializer
-        Port = Some(4567)}
+let CreatureHandler:Handler<GetCreatures, list<Creature>> =
+    {Name="get_creatures"
+     Consume= fun req -> 
+                sprintf "requested creature %s" req.CreatureType |> ignore
+                [{Type="Dog"; Name="Bobby"}]}
 
-let CreatureConsumer req = 
-    printf "Requested: %s" req.CreatureType
-    [{Name="Bobby"; Type="Dog"};
-     {Name="Fern"; Type="Princess"}]
-    |> List.filter (fun c -> c.Type = req.CreatureType)
+let handlers = AddHandler CreatureHandler []
 
-let Consumers = 
-    [CreateConsumer<CreaturesInMyHomeRequest, Creatures> CreatureConsumer]
+let config = {
+    Serializer= Serialization.JilSerializer
+    Handlers= handlers
+    Port=5555
+    Filters=[]
+}
 
-Consumers
-|> configureServer
-|> Server.Start
+Server.Start config

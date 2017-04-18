@@ -1,4 +1,5 @@
-﻿<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -7,7 +8,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Fazuki.Server</RootNamespace>
     <AssemblyName>Fazuki.Server</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
     <Name>Fazuki.Server</Name>
   </PropertyGroup>
@@ -30,33 +30,6 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\Fazuki.Server.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="FSharp.Core">
-      <HintPath>..\packages\FSharp.Core.3.0.2\lib\net40\FSharp.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="fszmq">
-      <HintPath>..\packages\fszmq.12.2.1\lib\net40\fszmq.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Domain.fs" />
-    <Compile Include="Handlers.fs" />
-    <Compile Include="Logging.fs" />
-    <Compile Include="MetaResponse.fs" />
-    <Compile Include="Configuration.fs" />
-    <Compile Include="Api.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Fazuki.Common\Fazuki.Common.fsproj">
-      <Name>Fazuki.Common</Name>
-      <Project>{09DFDDD7-D823-4D09-9617-7C563CA79A67}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -73,6 +46,39 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
+  <ItemGroup>
+    <Compile Include="Domain.fs" />
+    <Compile Include="Handlers.fs" />
+    <Compile Include="Logging.fs" />
+    <Compile Include="Errors.fs" />
+    <Compile Include="Server.fs" />
+    <Compile Include="Api.fs" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core">
+      <HintPath>..\packages\FSharp.Core.3.0.2\lib\net40\FSharp.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="fszmq">
+      <HintPath>..\packages\fszmq.12.2.1\lib\net40\fszmq.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <ProjectReference Include="..\Fazuki.Common\Fazuki.Common.fsproj">
+      <Name>Fazuki.Common</Name>
+      <Project>{09DFDDD7-D823-4D09-9617-7C563CA79A67}</Project>
+    </ProjectReference>
+    <Reference Include="AsyncIO">
+      <HintPath>..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
+    </Reference>
+    <Reference Include="NetMQ">
+      <HintPath>..\packages\NetMQ.4.0.0-rc5\lib\net40\NetMQ.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -80,7 +86,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
 </Project>

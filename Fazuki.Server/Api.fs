@@ -2,7 +2,7 @@
 
 open fszmq
 open System.Text
-open Fazuki.Server.Config
+open Fazuki.Server
 open System
 
 module Server = // the server pipeline

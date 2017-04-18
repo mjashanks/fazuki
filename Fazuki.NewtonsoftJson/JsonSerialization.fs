@@ -1,20 +1,20 @@
-﻿namespace Fazuki.Jil
+﻿namespace Fazuki.NewtonsoftJson
 
 open Fazuki.Common
-open Jil
+open Newtonsoft.Json
 open System
 open System.Text
 
 module Serialization = 
 
     let Serialize typ ob =
-        JSON.SerializeDynamic ob 
+        JsonConvert.SerializeObject ob
         |> Encoding.UTF8.GetBytes
 
     let Deserialize (typ:Type) (byt:byte[]) = 
         let decoded = Encoding.UTF8.GetString byt
-        JSON.Deserialize (decoded, typ, JSON.GetDefaultOptions())
+        JsonConvert.DeserializeObject(decoded, typ)
 
-    let JilSerializer = 
+    let NewtonsoftSerializer = 
         {Serialize = Serialize;
         Deserialize = Deserialize }

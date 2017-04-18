@@ -9,7 +9,7 @@ type RequestResponse = { Req:Type; Rep:Type }
 type MessageTypes = Dictionary<string, RequestResponse>
 
 type ClientConfig = {
-    Url : Url;
+    Url : string;
     Serializer : Serializer;
 } 
 

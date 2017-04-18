@@ -2,26 +2,24 @@
 
 open fszmq
 open System.Text
-open Fazuki.Client.Config
+open Fazuki.Client
 open System
 
-module Client = // the client pipline
-    
-    let Send<'rep> config req = 
-        let Instance = ConfiguredClientInstance<'rep>(config)
+type Client(config) = 
+    let instance = ConfiguredClientInstance config
+
+    member c.Send<'rep> name req = 
         let cast (o:obj) = o :?> 'rep
 
         // SEND REQUEST
         req
-        |> Instance.Serialize
-        |> Instance.AddHeader 
-        |> Instance.Encode
-        |> Instance.Send
+        |> instance.Serialize
+        |> instance.AddHeader name
+        |> instance.Send
 
         // RECEIVE REPLY
-        Instance.Receive ()
-        |> Instance.Decode
-        |> Instance.Deserialize 
-        |> cast    
+        instance.Receive ()
+        |> instance.Deserialize 
+        |> cast 
 
         

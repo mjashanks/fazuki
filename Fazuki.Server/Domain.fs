@@ -8,14 +8,14 @@ type MessageStream = IObservable<string>
 
 type UntypedHandler = {
     Consume : obj -> obj;
-    Id : string;
+    Id : byte[];
     Request : Type;
     Response : Type;
 }
 
 type Handler<'req, 'rep> = {
     Consume : 'req -> 'rep;
-    Id : string;
+    Name : string;
 }
 
 type ReceiveSuccess = {EncodedRequest:byte[]}
@@ -97,6 +97,6 @@ type MetaMessage = {
 type ServerConfig = {
     Serializer : Serializer
     Handlers : UntypedHandler list 
-    Port : Port
-    Filers : Filter list
+    Port : int
+    Filters : Filter list
 }    

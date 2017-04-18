@@ -2,6 +2,7 @@
 
 open System
 open System.Collections.Generic
+open System.Text
 
 type Serializer ={
     Serialize : Type -> obj -> byte[]
@@ -31,3 +32,5 @@ module Helpers =
         ob.GetType()
     let getObjRoute<'t> () =
         getTypeRoute typeof<'t>
+    let handlerNameToId (name:string)= 
+        Encoding.UTF8.GetBytes (name.PadRight(20, '.'))
