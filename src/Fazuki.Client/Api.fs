@@ -1,6 +1,6 @@
 ﻿namespace Fazuki.Client
 
-open fszmq
+open NetMQ
 open System.Text
 open Fazuki.Client
 open System
